@@ -15,10 +15,14 @@ import os
 import gdown
 
 MODEL_PATH = "voice_ai_cnn_model.h5"
+MODEL_URL = "https://drive.google.com/uc?id=15aXWpMUfQkRVbt4z8KzRWB7SGvjJiJUd&confirm=t"
 
-if not os.path.exists(MODEL_PATH):
-    url = "https://drive.google.com/file/d/15aXWpMUfQkRVbt4z8KzRWB7SGvjJiJUd/view?usp=sharing"
-    gdown.download(url, MODEL_PATH, quiet=False)
+if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 10_000_000:
+    print("Downloading model from Google Drive...")
+    gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+from tensorflow.keras.models import load_model
+model = load_model(MODEL_PATH)
+
 
 # ================= LOAD MODEL =================
 model = load_model("voice_ai_cnn_model.h5")
@@ -92,3 +96,4 @@ def detect_voice(
         "confidenceScore": round(confidence, 3),
         "explanation": explain(classification)
     }
+
