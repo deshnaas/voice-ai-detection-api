@@ -4,29 +4,32 @@ import base64
 import numpy as np
 import librosa
 import tempfile
+import os
+import gdown
 from tensorflow.keras.models import load_model
 
 # ================= CONFIG =================
 API_KEY = "sk_guvi_demo_123456"
-SUPPORTED_LANGUAGES = ["Tamil", "English", "Hindi", "Malayalam", "Telugu"]
 
-
-import os
-import gdown
+SUPPORTED_LANGUAGES = {
+    "english": "English",
+    "tamil": "Tamil",
+    "hindi": "Hindi",
+    "malayalam": "Malayalam",
+    "telugu": "Telugu"
+}
 
 MODEL_PATH = "voice_ai_cnn_model.h5"
 MODEL_URL = "https://drive.google.com/uc?id=15aXWpMUfQkRVbt4z8KzRWB7SGvjJiJUd&confirm=t"
 
+# ================= LOAD MODEL =================
 if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 10_000_000:
     print("Downloading model from Google Drive...")
     gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
-from tensorflow.keras.models import load_model
+
 model = load_model(MODEL_PATH)
 
-
-# ================= LOAD MODEL =================
-model = load_model("voice_ai_cnn_model.h5")
-
+# ================= APP =================
 app = FastAPI(title="AI Generated Voice Detection API")
 
 # ================= REQUEST SCHEMA =================
@@ -40,6 +43,7 @@ def extract_mel_spectrogram(audio_bytes, n_mels=128, max_len=128):
     with tempfile.NamedTemporaryFile(suffix=".mp3") as tmp:
         tmp.write(audio_bytes)
         tmp.flush()
+
         audio, sr = librosa.load(tmp.name, sr=None)
         mel = librosa.feature.melspectrogram(y=audio, sr=sr, n_mels=n_mels)
         mel_db = librosa.power_to_db(mel, ref=np.max)
@@ -67,33 +71,39 @@ def detect_voice(
     request: VoiceRequest,
     x_api_key: str = Header(None)
 ):
+    # API key validation
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key")
 
-    if request.language not in SUPPORTED_LANGUAGES:
+    # Language validation (CASE-INSENSITIVE)
+    language_input = request.language.strip().lower()
+    if language_input not in SUPPORTED_LANGUAGES:
         raise HTTPException(status_code=400, detail="Unsupported language")
 
+    standardized_language = SUPPORTED_LANGUAGES[language_input]
+
+    # Audio format validation
     if request.audioFormat.lower() != "mp3":
         raise HTTPException(status_code=400, detail="Only MP3 format supported")
 
+    # Base64 decode
     try:
         audio_bytes = base64.b64decode(request.audioBase64)
-    except:
+    except Exception:
         raise HTTPException(status_code=400, detail="Invalid Base64 audio")
 
+    # Prediction
     features = extract_mel_spectrogram(audio_bytes)
     probs = model.predict(features)[0]
 
     confidence = float(np.max(probs))
     prediction = int(np.argmax(probs))
-
     classification = "AI_GENERATED" if prediction == 1 else "HUMAN"
 
     return {
         "status": "success",
-        "language": request.language,
+        "language": standardized_language,
         "classification": classification,
         "confidenceScore": round(confidence, 3),
         "explanation": explain(classification)
     }
-
