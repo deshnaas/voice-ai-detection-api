@@ -10,6 +10,16 @@ from tensorflow.keras.models import load_model
 API_KEY = "sk_guvi_demo_123456"
 SUPPORTED_LANGUAGES = ["Tamil", "English", "Hindi", "Malayalam", "Telugu"]
 
+
+import os
+import gdown
+
+MODEL_PATH = "voice_ai_cnn_model.h5"
+
+if not os.path.exists(MODEL_PATH):
+    url = "https://drive.google.com/file/d/15aXWpMUfQkRVbt4z8KzRWB7SGvjJiJUd/view?usp=sharing"
+    gdown.download(url, MODEL_PATH, quiet=False)
+
 # ================= LOAD MODEL =================
 model = load_model("voice_ai_cnn_model.h5")
 
