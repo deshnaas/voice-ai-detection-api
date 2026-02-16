@@ -1,3 +1,27 @@
+"""
+AI Generated Voice Detection API
+
+This FastAPI application provides a REST endpoint for detecting
+whether an input MP3 audio sample is AI-generated or human speech.
+
+Pipeline:
+1. Base64 audio decoding
+2. Mel Spectrogram extraction
+3. CNN-based classification
+4. Confidence scoring
+5. Structured JSON response
+
+Security:
+- API Key authentication
+- Input validation
+- MP3-only enforcement
+
+Author: [Your Name]
+"""
+
+
+
+
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 import base64
@@ -107,3 +131,4 @@ def detect_voice(
         "confidenceScore": round(confidence, 3),
         "explanation": explain(classification)
     }
+
