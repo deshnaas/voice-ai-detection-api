@@ -132,14 +132,4 @@ def detect_voice(
         "explanation": explain(classification)
     }
 
-## Documentation Index
-
-- API_DOCS.md
-- MODEL_OVERVIEW.md
-- SECURITY.md
-- PERFORMANCE.md
-- INSTALLATION.md
-- USAGE.md
-- ARCHITECTURE.md
-- PROJECT_STRUCTURE.md
 
